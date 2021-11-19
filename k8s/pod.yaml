@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: x-cluster-test
+  #namespace: default
+spec:
+  containers:
+  - image: gcr.io/gxlb-asm-01/x-account:01
+    name: x-cluster-test
+    #command: ["sleep","infinity"]
+    env:
+    - name: PROJECT_ID
+      value: "gxlb-asm-01"
+    - name: TARGET_CLUSTER
+      value: "keda-pubsub"
+  serviceAccountName: x-cluster-ksa
