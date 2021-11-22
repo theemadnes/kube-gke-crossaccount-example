@@ -5,9 +5,12 @@ metadata:
   #namespace: default
 spec:
   containers:
-  - image: gcr.io/gxlb-asm-01/x-account:01
+  - image: gcr.io/gxlb-asm-01/x-account:02
     name: x-cluster-test
     #command: ["sleep","infinity"]
+    ports:
+      - name: http
+        containerPort: 8080
     env:
     - name: PROJECT_ID
       value: "gxlb-asm-01"

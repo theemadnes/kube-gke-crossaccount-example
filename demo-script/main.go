@@ -22,6 +22,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"google.golang.org/api/container/v1"
@@ -34,15 +35,50 @@ import (
 
 var fProjectId = flag.String("projectId", os.Getenv("PROJECT_ID"), "specify a project id to examine")
 
+var fTargetCluster = flag.String("targetCluster", os.Getenv("TARGET_CLUSTER"), "specify a target cluster to write to")
+
+var kubeConfig = ""
+
+func hello(w http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(w, "hello\n")
+}
+
+func createNamespace(w http.ResponseWriter, req *http.Request) {
+	// check for namespace name in query params
+	keys, ok := req.URL.Query()["name"]
+	if !ok || len(keys[0]) < 1 {
+		log.Println("Url Param 'name' is missing")
+		fmt.Fprintf(w, "Url Param 'name' is missing\n")
+		return
+	}
+	key := keys[0]
+	fmt.Println("Target cluster is", *fTargetCluster)
+	fmt.Println("New namespace name is", key)
+	//fmt.Println(kubeConfig)
+	fmt.Fprintf(w, "Attempting to create namespace %s on cluster %s\n", key, *fTargetCluster)
+}
+
 func main() {
-	flag.Parse()
+	/*flag.Parse()
 	if *fProjectId == "" {
 		log.Fatal("must specify -projectId")
 	}
+	if *fTargetCluster == "" {
+		log.Fatal("must specify -targetCluster")
+	}*/
 
-	if err := run(context.Background(), *fProjectId); err != nil {
+	/*if err := run(context.Background(), *fProjectId); err != nil {
+		log.Fatal(err)
+	}*/
+	kubeConfig, err := getK8sClusterConfigs(context.Background(), *fProjectId)
+	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println(kubeConfig.Clusters[*fTargetCluster])
+
+	http.HandleFunc("/createnamespace/", createNamespace)
+	http.HandleFunc("/", hello)
+	http.ListenAndServe(":8080", nil)
 }
 
 func run(ctx context.Context, projectId string) error {

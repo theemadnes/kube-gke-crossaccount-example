@@ -24,8 +24,11 @@ kubectl apply -f k8s/service-account.yaml
 
 #### build & run image
 (from demo script folder)
-pack build --builder gcr.io/buildpacks/builder:v1 --publish gcr.io/gxlb-asm-01/x-account:01
+pack build --builder gcr.io/buildpacks/builder:v1 --publish gcr.io/gxlb-asm-01/x-account:02
 kubectl apply -f k8s/pod.yaml
+
+Test calling pod
+kubectl port-forward x-cluster-test 8080:8080
 
 #### script stuff to set up:
 - add serving component
