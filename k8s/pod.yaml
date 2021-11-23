@@ -5,7 +5,7 @@ metadata:
   #namespace: default
 spec:
   containers:
-  - image: gcr.io/gxlb-asm-01/x-account:02
+  - image: gcr.io/gxlb-asm-01/x-account:03
     name: x-cluster-test
     #command: ["sleep","infinity"]
     ports:
@@ -15,5 +15,5 @@ spec:
     - name: PROJECT_ID
       value: "gxlb-asm-01"
     - name: TARGET_CLUSTER
-      value: "keda-pubsub"
+      value: "gke_gxlb-asm-01_us-central1_keda-pubsub"
   serviceAccountName: x-cluster-ksa

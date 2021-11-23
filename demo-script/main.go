@@ -26,6 +26,7 @@ import (
 	"os"
 
 	"google.golang.org/api/container/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp" // register GCP auth provider
@@ -37,13 +38,13 @@ var fProjectId = flag.String("projectId", os.Getenv("PROJECT_ID"), "specify a pr
 
 var fTargetCluster = flag.String("targetCluster", os.Getenv("TARGET_CLUSTER"), "specify a target cluster to write to")
 
-var kubeConfig = ""
+var kc *api.Config
 
 func hello(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "hello\n")
 }
 
-func createNamespace(w http.ResponseWriter, req *http.Request) {
+func namespaceHandler(w http.ResponseWriter, req *http.Request) {
 	// check for namespace name in query params
 	keys, ok := req.URL.Query()["name"]
 	if !ok || len(keys[0]) < 1 {
@@ -54,8 +55,43 @@ func createNamespace(w http.ResponseWriter, req *http.Request) {
 	key := keys[0]
 	fmt.Println("Target cluster is", *fTargetCluster)
 	fmt.Println("New namespace name is", key)
-	//fmt.Println(kubeConfig)
+	//fmt.Println(kc.Clusters[*fTargetCluster])
 	fmt.Fprintf(w, "Attempting to create namespace %s on cluster %s\n", key, *fTargetCluster)
+	createNamespace(context.Background(), key)
+}
+
+func createNamespace(ctx context.Context, nsName string) error {
+
+	cfg, err := clientcmd.NewNonInteractiveClientConfig(*kc, *fTargetCluster, &clientcmd.ConfigOverrides{CurrentContext: *fTargetCluster}, nil).ClientConfig()
+	if err != nil {
+		return fmt.Errorf("failed to create Kubernetes configuration cluster=%s: %w", *fTargetCluster, err)
+	}
+
+	k8s, err := kubernetes.NewForConfig(cfg)
+	if err != nil {
+		panic(err)
+	}
+
+	/*namespace := &k8s.CoreV1().Namespaces(){
+		ObjectMeta: metav1.ObjectMeta{
+			Name: nsName,
+		},
+	}*/
+
+	namespace := &v1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: nsName,
+		},
+	}
+	//ns, err := k8s.CoreV1().Namespaces().Create(ctx, namespace, metav1.CreateOptions{})
+	ns, err := k8s.CoreV1().Namespaces().Create(ctx, namespace, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to create namespace %s on cluster=%s: %w", nsName, *fTargetCluster, err)
+	}
+	fmt.Println("Created namespace", ns.Name)
+
+	//log.Printf("Namespaces found in cluster=%s", clusterName)
+	return nil
 }
 
 func main() {
@@ -70,13 +106,15 @@ func main() {
 	/*if err := run(context.Background(), *fProjectId); err != nil {
 		log.Fatal(err)
 	}*/
+	// grab kubeconfig and assign to global kc variable
 	kubeConfig, err := getK8sClusterConfigs(context.Background(), *fProjectId)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(kubeConfig.Clusters[*fTargetCluster])
+	kc = kubeConfig
+	//fmt.Println(kubeConfig.Clusters[*fTargetCluster])
 
-	http.HandleFunc("/createnamespace/", createNamespace)
+	http.HandleFunc("/createnamespace/", namespaceHandler)
 	http.HandleFunc("/", hello)
 	http.ListenAndServe(":8080", nil)
 }

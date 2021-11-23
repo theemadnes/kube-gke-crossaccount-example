@@ -24,7 +24,7 @@ kubectl apply -f k8s/service-account.yaml
 
 #### build & run image
 (from demo script folder)
-pack build --builder gcr.io/buildpacks/builder:v1 --publish gcr.io/gxlb-asm-01/x-account:02
+pack build --builder gcr.io/buildpacks/builder:v1 --publish gcr.io/gxlb-asm-01/x-account:03
 kubectl apply -f k8s/pod.yaml
 
 Test calling pod
