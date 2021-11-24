@@ -5,7 +5,7 @@ metadata:
   #namespace: default
 spec:
   containers:
-  - image: gcr.io/gxlb-asm-01/x-account:03
+  - image: gcr.io/gxlb-asm-01/x-account:04
     name: x-cluster-test
     #command: ["sleep","infinity"]
     ports:
