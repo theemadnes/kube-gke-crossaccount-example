@@ -13,6 +13,9 @@ Create GSA:
 ```
 gcloud iam service-accounts create x-cluster-gsa
 ```
+
+Bind the `roles/container.developer` role to the GSA. 
+> WARNING: the `roles/container.developer` role isn't scoped to a specific cluster, so if the env vars aren't configured correctly for the pod spec, you could end up creating resources on the wrong cluster within the project
 ```
 gcloud projects add-iam-policy-binding gxlb-asm-01 \
     --member "serviceAccount:x-cluster-gsa@gxlb-asm-01.iam.gserviceaccount.com" \
